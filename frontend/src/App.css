@@ -1,0 +1,9 @@
+/* index.css or App.css */
+
+body{
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background-color: #22355a; /* Same as your page */
+  font-family: Arial, sans-serif;
+}

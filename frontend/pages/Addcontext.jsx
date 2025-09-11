@@ -1,94 +1,91 @@
-import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { MdAddPhotoAlternate } from 'react-icons/md';
-import { API_BASE_URL } from '../src/config'; // ✅ dynamic base URL
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../src/config"; // ✅ dynamic base URL
+
 const AddContextPage = () => {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [image, setImage] = useState(null);
-  const [emoji, setEmoji] = useState('🙂');
-  const fileInputRef = useRef(null);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [emoji, setEmoji] = useState("🙂");
   const navigate = useNavigate();
 
-
-  const formattedDate = new Date().toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
+  const formattedDate = new Date().toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
   });
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setImage(reader.result);
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleSave = async () => {
-    const user_id = localStorage.getItem('userId');
-    if (!user_id || (!title && !content && !image)) return;
+    const user_id = localStorage.getItem("userId");
+    if (!user_id || (!title && !content)) return;
 
-    const payload = {
-      user_id,
-      title,
-      content,
-      image_url: image,
-      emoji,
-    };
+    const payload = { user_id, title, content, emoji };
 
     try {
       const response = await fetch(`${API_BASE_URL}/save-feed`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       const data = await response.json();
       if (response.ok && data.success) {
-        navigate('/feed');
+        navigate("/feed");
       }
     } catch (err) {
       console.error("Save error:", err);
     }
   };
 
-  const getCardBackgroundColor = (emoji) => {
+  // 🎨 Mood-based background color
+  const getBgClass = (emoji) => {
     switch (emoji) {
-      case "🙂": return "linear-gradient(to right,rgb(196, 228, 212),rgb(221, 226, 180))";
-      case "😔": return "linear-gradient(to right, #d7d2cc, rgb(75, 96, 112))";
-      case "😄": return "linear-gradient(to right, rgb(240, 206, 119), rgb(236, 244, 118))";
-      case "😡": return "linear-gradient(to right,rgb(240, 111, 113), rgb(227, 166, 96))";
-      case "😭": return "linear-gradient(to right, rgb(64, 89, 91), rgb(128, 166, 219))";
-      case "😱": return "linear-gradient(to right,rgb(120, 225, 79),rgb(197, 222, 88))";
-      case "😕": return "linear-gradient(to right,rgb(153, 213, 237),rgb(75, 134, 141))";
-      default: return "#1a2b4c";
+      case "🙂":
+        return "bg-gradient-to-r from-emerald-200 to-lime-200";
+      case "😔":
+        return "bg-gradient-to-r from-gray-300 to-slate-600";
+      case "😄":
+        return "bg-gradient-to-r from-yellow-300 to-yellow-200";
+      case "😡":
+        return "bg-gradient-to-r from-red-400 to-orange-300";
+      case "😭":
+        return "bg-gradient-to-r from-cyan-800 to-indigo-400";
+      case "😱":
+        return "bg-gradient-to-r from-green-400 to-lime-300";
+      case "😕":
+        return "bg-gradient-to-r from-sky-300 to-cyan-700";
+      default:
+        return "bg-slate-800";
     }
   };
 
-  const pageStyle = {
-    background: getCardBackgroundColor(emoji),
-    minHeight: '100vh',
-    color: 'white',
-    padding: '20px',
-    fontFamily: 'Arial, sans-serif',
-    position: 'relative',
-    transition: 'background 0.5s ease'
-  };
-
   return (
-    <div style={pageStyle}>
-      <div style={topNavStyle}>
-        <button onClick={() => navigate('/feed')} style={navBtnStyle}>Feed</button>
-        <button onClick={() => navigate('/calendar')} style={navBtnStyle}>Calendar</button>
+    <div
+      className={`${getBgClass(
+        emoji
+      )} min-h-screen text-white p-6 transition-colors duration-500`}
+    >
+      {/* 🔝 Navigation */}
+      <div className="absolute top-4 right-6 flex gap-3">
+        <button
+          onClick={() => navigate("/feed")}
+          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-sm font-medium"
+        >
+          My Feed
+        </button>
+        <button
+          onClick={() => navigate("/calendar")}
+          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-sm font-medium"
+        >
+          Mood Calendar
+        </button>
       </div>
 
-      <div style={dateRowStyle}>
+      {/* 😃 Emoji + Date in one row */}
+      <div className="flex items-center gap-4 mt-12 mb-6">
         <select
-          onChange={(e) => setEmoji(e.target.value)}
           value={emoji}
-          style={emojiSelectStyle}
+          onChange={(e) => setEmoji(e.target.value)}
+          className="text-3xl bg-transparent cursor-pointer focus:outline-none"
         >
           <option>🙂</option>
           <option>😔</option>
@@ -98,130 +95,36 @@ const AddContextPage = () => {
           <option>😕</option>
           <option>😱</option>
         </select>
-
-        <h2 style={{ margin: 0 }}>{formattedDate}</h2>
-
-        <div
-          title="Upload image"
-          style={{ cursor: 'pointer', fontSize: '28px', color: 'white' }}
-          onClick={() => fileInputRef.current.click()}
-        >
-          <MdAddPhotoAlternate />
-          <input
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            onChange={handleImageUpload}
-            style={{ display: 'none' }}
-          />
-        </div>
+        <h2 className="text-xl font-semibold">{formattedDate}</h2>
       </div>
 
+      {/* 📝 Title */}
       <input
         type="text"
-        placeholder="Title"
+        placeholder="Add a short title for your day"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        style={inputStyle}
+        className="w-full p-3 mb-4 rounded-lg text-black text-lg focus:ring-2 focus:ring-blue-400 outline-none"
       />
 
+      {/* 📝 Content */}
       <textarea
-        placeholder="Write more here..."
+        placeholder="How are you feeling today? Write your thoughts here..."
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        rows={10}
-        style={textareaStyle}
+        rows={8}
+        className="w-full p-3 rounded-lg text-black text-base resize-y focus:ring-2 focus:ring-blue-400 outline-none"
       />
 
-      {image && (
-        <div style={{ marginTop: '10px' }}>
-          <img src={image} alt="Preview" style={imgPreviewStyle} />
-        </div>
-      )}
-
-      <button onClick={handleSave} style={saveBtnStyle}>Save</button>
+      {/* 💾 Save */}
+      <button
+        onClick={handleSave}
+        className="mt-6 px-6 py-3 bg-blue-500 hover:bg-blue-600 rounded-xl text-white font-semibold text-lg shadow-lg"
+      >
+        Save Entry
+      </button>
     </div>
   );
-};
-
-// 🔧 Styles
-const topNavStyle = {
-  position: 'absolute',
-  top: '20px',
-  right: '20px',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '12px'
-};
-
-const navBtnStyle = {
-  padding: '6px 12px',
-  fontSize: '14px',
-  backgroundColor: '#4da6ff',
-  border: 'none',
-  borderRadius: '6px',
-  color: '#fff',
-  cursor: 'pointer'
-};
-
-const dateRowStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '16px',
-  marginBottom: '20px',
-  marginTop: '20px',
-};
-
-const emojiSelectStyle = {
-  fontSize: '28px',
-  padding: '6px',
-  borderRadius: '6px',
-  backgroundColor: 'rgba(0,0,0,0.3)',
-  color: 'white',
-  border: 'none',
-  outline: 'none',
-  appearance: 'none',
-  cursor: 'pointer'
-};
-
-const inputStyle = {
-  width: '100%',
-  padding: '6px',
-  marginBottom: '10px',
-  fontSize: '18px',
-  borderRadius: '8px',
-  border: 'none',
-  backgroundColor: 'white',
-  color: 'black'
-};
-
-const textareaStyle = {
-  width: '100%',
-  padding: '6px',
-  fontSize: '16px',
-  borderRadius: '8px',
-  border: 'none',
-  resize: 'vertical',
-  backgroundColor: 'white',
-  color: 'black'
-};
-
-const imgPreviewStyle = {
-  width: '100%',
-  maxHeight: '200px',
-  objectFit: 'cover',
-  borderRadius: '8px'
-};
-
-const saveBtnStyle = {
-  marginTop: '20px',
-  padding: '10px 20px',
-  fontSize: '16px',
-  backgroundColor: '#4da6ff',
-  border: 'none',
-  borderRadius: '8px',
-  color: '#fff',
-  cursor: 'pointer'
 };
 
 export default AddContextPage;

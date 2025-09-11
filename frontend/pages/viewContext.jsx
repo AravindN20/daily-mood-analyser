@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Pencil, Trash2, ImagePlus } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { API_BASE_URL } from '../src/config'; // ✅ dynamic base URL
 
 const ViewContextPage = () => {
   const { id } = useParams();
   const [feed, setFeed] = useState(null);
   const [editable, setEditable] = useState(false);
-  const [image, setImage] = useState(null);
   const [showEmojiOptions, setShowEmojiOptions] = useState(false);
   const navigate = useNavigate();
 
@@ -18,7 +17,6 @@ const ViewContextPage = () => {
         const data = await response.json();
         if (response.ok && data.success) {
           setFeed(data.feed);
-          setImage(data.feed.image_url);
         }
       } catch (err) {
         console.error("Error fetching feed:", err);
@@ -27,21 +25,12 @@ const ViewContextPage = () => {
     fetchFeed();
   }, [id]);
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => setImage(reader.result);
-    reader.readAsDataURL(file);
-  };
-
   const handleSave = async () => {
     const updatedFeed = {
       id,
       title: feed.title,
       content: feed.content,
       emoji: feed.emoji,
-      image_url: image,
     };
     try {
       const response = await fetch(`${API_BASE_URL}/update-feed/${id}`, {
@@ -91,112 +80,67 @@ const ViewContextPage = () => {
 
   const getCardBackgroundColor = (emoji) => {
     switch (emoji) {
-      case "🙂": return "linear-gradient(to right, #a1ffce, #faffd1)";
-      case "😔": return "linear-gradient(to right, #d7d2cc, rgb(99, 125, 145))";
-      case "😄": return "linear-gradient(to right, rgb(225, 194, 115), rgb(237, 198, 92))";
-      case "😡": return "linear-gradient(to right, #ff4e50, rgb(242, 201, 87))";
-      case "😭": return "linear-gradient(to right, rgb(139, 227, 234), rgb(128, 166, 219))";
-      case "😱": return "linear-gradient(to right, #fbc2eb, #a6c1ee)";
-      case "😕": return "linear-gradient(to right, #c2e9fb, #a1c4fd)";
-      default: return "#ffffff";
+      case "🙂": return "bg-gradient-to-r from-green-200 to-yellow-100";
+      case "😔": return "bg-gradient-to-r from-gray-300 to-slate-500";
+      case "😄": return "bg-gradient-to-r from-yellow-200 to-yellow-400";
+      case "😡": return "bg-gradient-to-r from-red-400 to-yellow-300";
+      case "😭": return "bg-gradient-to-r from-cyan-200 to-blue-300";
+      case "😱": return "bg-gradient-to-r from-pink-200 to-indigo-300";
+      case "😕": return "bg-gradient-to-r from-blue-200 to-indigo-200";
+      default: return "bg-white";
     }
   };
 
   const emojiOptions = ['🙂', '😔', '😄', '😡', '😭', '😱', '😕'];
 
-  if (!feed) return <p style={{ color: 'white', padding: '20px' }}>Loading feed...</p>;
-
-  const bodyBg = getCardBackgroundColor(feed.emoji);
+  if (!feed) return <p className="text-white p-5">Loading feed...</p>;
 
   return (
-    <div style={{
-      background: bodyBg,
-      minHeight: '100vh',
-      padding: '20px',
-      color: '#333',
-      fontFamily: 'Arial',
-    }}>
+    <div className={`${getCardBackgroundColor(feed.emoji)} min-h-screen p-5 font-sans`}>
+      {/* Top Navigation */}
       {editable ? (
         <button
           onClick={() => setEditable(false)}
-          style={{
-            marginBottom: '20px',
-            backgroundColor: '#4da6ff',
-            color: 'white',
-            padding: '8px 16px',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-          }}
+          className="mb-5 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
         >
           ⬅ Back
         </button>
       ) : (
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '20px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-          padding: '10px',
-          borderRadius: '10px',
-          backgroundColor: '#ffffff90',
-        }}>
+        <div className="flex justify-between items-center mb-5 shadow-md p-3 rounded-lg bg-white/80">
           <button
             onClick={() => navigate(-1)}
-            style={{
-              backgroundColor: '#4da6ff',
-              color: 'white',
-              padding: '8px 16px',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-            }}
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
           >
-            ⬅ Back
+             Back
           </button>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <Pencil onClick={() => setEditable(true)} size={24} style={{ cursor: 'pointer', color: '#ffa500' }} />
-            <Trash2 onClick={handleDelete} size={24} style={{ cursor: 'pointer', color: '#ff4d4d' }} />
+          <div className="flex gap-3">
+            <Pencil
+              onClick={() => setEditable(true)}
+              size={24}
+              className="cursor-pointer text-yellow-500"
+            />
+            <Trash2
+              onClick={handleDelete}
+              size={24}
+              className="cursor-pointer text-red-500"
+            />
           </div>
         </div>
       )}
 
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        marginBottom: '10px',
-        gap: '10px',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      {/* Emoji + Date */}
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
+        <div className="flex items-center gap-3">
           {editable ? (
-            <div style={{ position: 'relative' }}>
+            <div className="relative">
               <span
-                style={{
-                  fontSize: '40px',
-                  cursor: 'pointer',
-                }}
+                className="text-4xl cursor-pointer"
                 onClick={() => setShowEmojiOptions(!showEmojiOptions)}
               >
                 {feed.emoji}
               </span>
               {showEmojiOptions && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '45px',
-                    left: '0',
-                    display: 'flex',
-                    flexDirection: 'row',
-                    background: bodyBg,
-                    borderRadius: '8px',
-                    padding: '6px 10px',
-                    zIndex: 1000,
-                    gap: '10px',
-                  }}
-                >
+                <div className="absolute top-12 left-0 flex gap-2 bg-white shadow-md rounded-lg p-2">
                   {emojiOptions.map((emoji) => (
                     <span
                       key={emoji}
@@ -204,10 +148,7 @@ const ViewContextPage = () => {
                         setFeed({ ...feed, emoji });
                         setShowEmojiOptions(false);
                       }}
-                      style={{
-                        fontSize: '32px',
-                        cursor: 'pointer',
-                      }}
+                      className="text-2xl cursor-pointer hover:scale-110 transition"
                     >
                       {emoji}
                     </span>
@@ -216,32 +157,19 @@ const ViewContextPage = () => {
               )}
             </div>
           ) : (
-            <span style={{ fontSize: '40px' }}>{feed.emoji}</span>
+            <span className="text-4xl">{feed.emoji}</span>
           )}
-          <span style={{ fontSize: '18px' }}>{formatDate(feed.created_at)}</span>
-          {editable && (
-            <>
-              <label htmlFor="imageUpload" style={{ cursor: 'pointer' }}>
-                <ImagePlus size={24} />
-              </label>
-              <input
-                id="imageUpload"
-                type="file"
-                accept="image/*"
-                style={{ display: 'none' }}
-                onChange={handleImageUpload}
-              />
-            </>
-          )}
+          <span className="text-lg">{formatDate(feed.created_at)}</span>
         </div>
 
         {!editable && (
-          <p style={{ fontSize: '13px', color: '#444' }}>
+          <p className="text-xs text-gray-600">
             Last edited: {formatDateTime(feed.updated_at || feed.created_at)}
           </p>
         )}
       </div>
 
+      {/* Content */}
       {editable ? (
         <>
           <input
@@ -249,66 +177,25 @@ const ViewContextPage = () => {
             value={feed.title}
             onChange={(e) => setFeed({ ...feed, title: e.target.value })}
             placeholder="Title"
-            style={{
-              width: '100%',
-              fontSize: '20px',
-              marginBottom: '10px',
-              padding: '6px',
-              borderRadius: '8px',
-              border: 'none',
-            }}
+            className="w-full text-xl mb-3 p-2 rounded-lg border"
           />
           <textarea
             value={feed.content}
             onChange={(e) => setFeed({ ...feed, content: e.target.value })}
             placeholder="Write more here..."
             rows={6}
-            style={{
-              width: '100%',
-              fontSize: '16px',
-              marginBottom: '10px',
-              padding: '6px',
-              borderRadius: '8px',
-              border: 'none',
-            }}
+            className="w-full text-base mb-3 p-2 rounded-lg border"
           />
-          {image && (
-            <img
-              src={image}
-              alt="Uploaded"
-              style={{
-                width: '100%',
-                maxHeight: '200px',
-                borderRadius: '8px',
-                marginTop: '10px',
-              }}
-            />
-          )}
-          <div style={{ marginTop: '16px' }}>
+          <div className="mt-4 flex gap-3">
             <button
               onClick={handleSave}
-              style={{
-                marginRight: '10px',
-                padding: '10px 20px',
-                backgroundColor: 'green',
-                border: 'none',
-                borderRadius: '8px',
-                color: 'white',
-                cursor: 'pointer',
-              }}
+              className="px-5 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
             >
               Save
             </button>
             <button
               onClick={() => setEditable(false)}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: 'gray',
-                border: 'none',
-                borderRadius: '8px',
-                color: 'white',
-                cursor: 'pointer',
-              }}
+              className="px-5 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition"
             >
               Cancel
             </button>
@@ -316,20 +203,8 @@ const ViewContextPage = () => {
         </>
       ) : (
         <>
-          <h2 style={{ margin: '10px 0' }}>{feed.title}</h2>
-          {feed.image_url && (
-            <img
-              src={feed.image_url}
-              alt="context"
-              style={{
-                width: '100%',
-                maxHeight: '200px',
-                borderRadius: '8px',
-                marginBottom: '10px',
-              }}
-            />
-          )}
-          <p style={{ marginTop: '16px' }}>{feed.content}</p>
+          <h2 className="text-2xl font-semibold my-3">{feed.title}</h2>
+          <p className="mt-4 text-base">{feed.content}</p>
         </>
       )}
     </div>

@@ -284,6 +284,87 @@ app.post('/get-analysis-data', async (req, res) => {
 });
 
 
+// ✨ NEW: API endpoint to get emoji counts for a specific number of days
+app.post('/get-emoji-counts', async (req, res) => {
+    const { userId, days } = req.body;
+    if (!userId || !days) {
+        return res.status(400).json({ success: false, message: "Missing required fields: userId, days" });
+    }
+
+    try {
+        // This SQL query efficiently counts emojis within the specified date range
+        const sql = `
+            SELECT emoji, COUNT(*) as count 
+            FROM userfeeds 
+            WHERE user_id = ? AND created_at >= NOW() - INTERVAL ? DAY
+            GROUP BY emoji
+        `;
+        const [results] = await db.query(sql, [userId, days]);
+
+        res.status(200).json({ success: true, emojiCounts: results });
+
+    } catch (err) {
+        console.error("❌ Error fetching emoji counts:", err);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+});
+
+
+// Get mood counts for a specific month
+app.post('/get-mood-counts', async (req, res) => {
+    const { userId, year, month } = req.body;
+    if (!userId || !year || !month) return res.status(400).json({ success: false, message: "Missing required fields" });
+    try {
+        const sql = `SELECT prediction, COUNT(*) as count FROM userfeeds WHERE user_id = ? AND YEAR(created_at) = ? AND MONTH(created_at) = ? AND prediction IN ('normal', 'stressed', 'depressed') GROUP BY prediction`;
+        const [results] = await db.query(sql, [userId, year, month]);
+        const counts = { normal: 0, stressed: 0, depressed: 0 };
+        results.forEach(row => {
+            if (counts.hasOwnProperty(row.prediction)) {
+                counts[row.prediction] = row.count;
+            }
+        });
+        res.status(200).json({ success: true, counts });
+    } catch (err) {
+        console.error("❌ Error fetching mood counts:", err);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+});
+
+// ✨ NEW: API endpoint to get mood counts for a custom number of days from today
+app.post('/get-mood-counts-by-days', async (req, res) => {
+    const { userId, days } = req.body;
+    if (!userId || !days) {
+        return res.status(400).json({ success: false, message: "Missing required fields: userId, days" });
+    }
+
+    try {
+        const sql = `
+            SELECT prediction, COUNT(*) as count 
+            FROM userfeeds 
+            WHERE user_id = ? 
+            AND created_at >= NOW() - INTERVAL ? DAY
+            AND prediction IN ('normal', 'stressed', 'depressed')
+            GROUP BY prediction
+        `;
+        const [results] = await db.query(sql, [userId, days]);
+
+        const counts = { normal: 0, stressed: 0, depressed: 0 };
+        results.forEach(row => {
+            if (counts.hasOwnProperty(row.prediction)) {
+                counts[row.prediction] = row.count;
+            }
+        });
+
+        res.status(200).json({ success: true, counts });
+
+    } catch (err) {
+        console.error("❌ Error fetching mood counts by days:", err);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+});
+
+
+
 const port = process.env.PORT || 3000;
 
 app.listen(port, () => {

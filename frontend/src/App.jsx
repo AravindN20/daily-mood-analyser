@@ -7,6 +7,8 @@ import CalendarPage from "../pages/Calendar";
 import FeedPage from "../pages/feed";
 import AddContextPage from "../pages/Addcontext";
 import ViewContextPage from "../pages/viewContext";
+import PieChartPage from "../pages/PieChartPage";
+import AnalysisPage from "../pages/AnalysisPage";
 
 function App() {
   return (
@@ -21,6 +23,8 @@ function App() {
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/viewcontext/:id" element={<ViewContextPage />} />
         <Route path="/Addcontext" element={<AddContextPage />} />
+        <Route path="/piechart" element={<PieChartPage />} />
+        <Route path="/analysis" element={<AnalysisPage />} />
       </Routes>
     </Router>
   );

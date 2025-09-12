@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
-// ✨ FIX: Replaced 'react-icons/fa' with 'lucide-react' which is already in use.
-import { Calendar, Plus, PieChart, Pencil, Trash2 } from 'lucide-react';
+// ✨ ADDED: BarChart2 icon for the new analysis link
+import { Calendar, Plus, PieChart, Pencil, Trash2, BarChart2 } from 'lucide-react';
 
-// ✨ FIX: Defined API_BASE_URL directly to resolve the import error.
+// ✨ Defined API_BASE_URL directly to resolve potential import errors.
 const API_BASE_URL = 'http://localhost:3000';
 
 const FeedPage = () => {
@@ -45,26 +45,26 @@ const FeedPage = () => {
 
     fetchFeeds();
   }, [navigate]);
-  
-  const handleDelete = async (idToDelete) => {
-    if (!window.confirm("Are you sure you want to permanently delete this entry?")) {
-        return;
-    }
+  
+  const handleDelete = async (idToDelete) => {
+    if (!window.confirm("Are you sure you want to permanently delete this entry?")) {
+        return;
+    }
 
-    try {
-        const response = await fetch(`${API_BASE_URL}/delete-feed/${idToDelete}`, {
-            method: 'DELETE',
-        });
-        const data = await response.json();
-        if (data.success) {
-            setFeeds(currentFeeds => currentFeeds.filter(feed => feed.id !== idToDelete));
-        } else {
-            console.error("Failed to delete feed:", data.message);
-        }
-    } catch (error) {
-        console.error("Delete request error:", error);
-    }
-  };
+    try {
+        const response = await fetch(`${API_BASE_URL}/delete-feed/${idToDelete}`, {
+            method: 'DELETE',
+        });
+        const data = await response.json();
+        if (data.success) {
+            setFeeds(currentFeeds => currentFeeds.filter(feed => feed.id !== idToDelete));
+        } else {
+            console.error("Failed to delete feed:", data.message);
+        }
+    } catch (error) {
+        console.error("Delete request error:", error);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.clear();
@@ -107,12 +107,17 @@ const FeedPage = () => {
         </div>
 
         <div className="flex gap-5 items-center">
-          {/* ✨ FIX: Replaced Fa icons with lucide-react icons */}
+          {/* ✨ MODIFIED: Added the new analysis icon and corrected pie chart route */}
           <PieChart 
             size={22} 
             className="text-gray-700 hover:text-indigo-600 cursor-pointer transition-transform transform hover:scale-110" 
-            onClick={() => alert("Analysis coming soon...")} 
+            onClick={() => navigate('/piechart')} 
           />
+          <BarChart2
+            size={22}
+            className="text-gray-700 hover:text-indigo-600 cursor-pointer transition-transform transform hover:scale-110"
+            onClick={() => navigate('/analysis')}
+          />
           <Calendar 
             size={22} 
             className="text-gray-700 hover:text-indigo-600 cursor-pointer transition-transform transform hover:scale-110" 
@@ -134,29 +139,29 @@ const FeedPage = () => {
               key={feed.id}
               onMouseEnter={() => setHoveredId(feed.id)}
               onMouseLeave={() => setHoveredId(null)}
-               onClick={() => navigate(`/viewcontext/${feed.id}`)}
+               onClick={() => navigate(`/viewcontext/${feed.id}`)}
               className={`relative p-6 rounded-2xl shadow-lg bg-gradient-to-r ${getCardBackgroundColor(feed.emoji)} transition-all transform hover:scale-105 hover:shadow-2xl cursor-pointer`}
             >
-                {hoveredId === feed.id && (
-                    <div className="absolute top-4 right-4 flex items-center gap-3 bg-white/50 p-2 rounded-full">
-                        <Pencil
-                            size={18}
-                            className="text-gray-700 hover:text-blue-600 transition-colors"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/viewcontext/${feed.id}`);
-                            }}
-                        />
-                        <Trash2
-                            size={18}
-                            className="text-gray-700 hover:text-red-600 transition-colors"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete(feed.id);
-                            }}
-                        />
-                    </div>
-                )}
+                {hoveredId === feed.id && (
+                    <div className="absolute top-4 right-4 flex items-center gap-3 bg-white/50 p-2 rounded-full">
+                        <Pencil
+                            size={18}
+                            className="text-gray-700 hover:text-blue-600 transition-colors"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/viewcontext/${feed.id}`);
+                            }}
+                        />
+                        <Trash2
+                            size={18}
+                            className="text-gray-700 hover:text-red-600 transition-colors"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(feed.id);
+                            }}
+                        />
+                    </div>
+                )}
               <h2 className="text-xl font-bold mb-2 text-gray-900">{feed.title}</h2>
               <p className="text-sm text-gray-600 mb-3">{new Date(feed.created_at).toLocaleDateString()}</p>
               <p className="text-gray-800 line-clamp-2">{feed.content}</p>
@@ -172,7 +177,6 @@ const FeedPage = () => {
         onClick={() => navigate('/Addcontext')}
         className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-indigo-500 to-blue-600 text-white rounded-full w-16 h-16 flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
       >
-        {/* ✨ FIX: Replaced Fa icon with lucide-react icon */}
         <Plus size={22} />
       </button>
     </div>
@@ -180,4 +184,3 @@ const FeedPage = () => {
 };
 
 export default FeedPage;
-

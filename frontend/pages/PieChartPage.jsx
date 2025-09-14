@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 // ✨ Removed router wrapper as it should be handled in the main App.js
 import { useNavigate } from "react-router-dom";
-
+import { API_BASE_URL } from "../src/config";
 // --- Inline SVG Icons ---
 const Home = ({ size = 22 }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
@@ -17,7 +17,7 @@ const BarChart2 = ({ size = 22 }) => (
 );
 
 
-const API_BASE_URL = "http://localhost:3000"; 
+
 
 // --- ✨ MODIFIED: Custom Chart component rewritten to use CSS for a drawing animation ---
 const CustomDonutChart = ({ data, colors }) => {

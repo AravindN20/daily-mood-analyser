@@ -20,6 +20,9 @@ const supabaseConnectionString = process.env.DATABASE_URL;
 
 const pool = new pg.Pool({
     connectionString: supabaseConnectionString,
+    ssl: {
+      rejectUnauthorized: false
+    }
 });
 
 

@@ -91,9 +91,19 @@ app.post('/save-feed', async (req, res) => {
             const aiServiceUrl = `${process.env.AI_SERVICE_URL}/analyze`;
             const aiResponse = await axios.post(aiServiceUrl, { text: textToAnalyze });
             
-            const genericLabel = aiResponse.data.prediction;
-            const labelMap = { 'LABEL_0': 'stressed', 'LABEL_1': 'normal', 'LABEL_2': 'depressed' };
-            prediction = labelMap[genericLabel] || 'unknown';
+           //...
+const genericLabel = aiResponse.data.prediction;
+const labelMap = { // <-- THIS IS THE NEW, CORRECT ONE
+  'sadness':  'depressed',
+  'anger':    'stressed',
+  'fear':     'stressed',
+  'disgust':  'stressed',
+  'neutral':  'normal',
+  'joy':      'normal',
+  'surprise': 'normal'
+};
+prediction = labelMap[genericLabel] || 'unknown';
+//...
         } catch (aiError) {
             console.error("❌ Error calling AI service:", aiError.message);
             prediction = 'analysis_failed';

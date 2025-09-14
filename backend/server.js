@@ -310,11 +310,14 @@ async function processUnanalyzedFeeds() {
         const aiResponse = await axios.post(aiServiceUrl, { text: textToAnalyze });
         
         const genericLabel = aiResponse.data.prediction;
-        const labelMap = {
-  'Depression': 'depressed',
-  'Stress':     'stressed',
-  'Anxiety':    'stressed', // Also mapping "Anxiety" to your "stressed" category
-  'Normal':     'normal'
+       const labelMap = {
+  'sadness':  'depressed',
+  'anger':    'stressed',
+  'fear':     'stressed',
+  'disgust':  'stressed',
+  'neutral':  'normal',
+  'joy':      'normal',
+  'surprise': 'normal'
 };
         const newPrediction = labelMap[genericLabel] || 'unknown';
 

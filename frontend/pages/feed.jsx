@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Calendar, Plus, PieChart, Pencil, Trash2, BarChart2 } from 'lucide-react';
 
 // ✨ Defined API_BASE_URL directly to resolve potential import errors.
-const API_BASE_URL = 'http://localhost:3000';
+import { API_BASE_URL } from "../src/config";
 
 const FeedPage = () => {
   const [feeds, setFeeds] = useState([]);

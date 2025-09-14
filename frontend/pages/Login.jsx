@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
+import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../src/config';
 
 function UserLogin() {
@@ -211,12 +212,11 @@ function UserLogin() {
             {/* Sign Up Link */}
             <p className="text-center text-gray-600 mt-6">
               Don't have an account?{' '}
-              <a 
-                href="/Registration" 
-                className="text-purple-600 hover:text-purple-800 font-semibold hover:underline transition-all duration-200"
-              >
-                Register here
-              </a>
+              <Link 
+     to="/Registration" 
+     className="text-purple-600 hover:text-purple-800 font-semibold hover:underline transition-all duration-200">
+  Register here
+    </Link>
             </p>
           </div>
         </div>

@@ -311,10 +311,11 @@ async function processUnanalyzedFeeds() {
         
         const genericLabel = aiResponse.data.prediction;
         const labelMap = {
-          'LABEL_0': 'stressed',
-          'LABEL_1': 'normal',
-          'LABEL_2': 'depressed'
-        };
+  'Depression': 'depressed',
+  'Stress':     'stressed',
+  'Anxiety':    'stressed', // Also mapping "Anxiety" to your "stressed" category
+  'Normal':     'normal'
+};
         const newPrediction = labelMap[genericLabel] || 'unknown';
 
         await pool.query(

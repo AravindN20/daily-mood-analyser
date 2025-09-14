@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { MemoryRouter, Routes, Route, useNavigate } from "react-router-dom";
-
-const API_BASE_URL = "http://localhost:3000"; 
+import { API_BASE_URL } from "../src/config";
 
 // --- Inline SVG Icons ---
 const ChevronLeft = ({ size = 20 }) => (

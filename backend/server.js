@@ -9,8 +9,7 @@ dotenv.config();
 const app = express();
 
 const allowedOrigins = [
-  'https://daily-mood-analyser-frontend.onrender.com', // Your deployed frontend
-  'http://localhost:5173'                             // Your local development machine
+  'https://daily-mood-analyser-frontend.onrender.com' // Your local development machine
 ];
 
 app.use(cors({

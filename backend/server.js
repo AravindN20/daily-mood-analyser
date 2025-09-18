@@ -8,11 +8,14 @@ dotenv.config();
 
 const app = express();
 
-// <-- CHANGED: CORS is now configured to use an environment variable for security
-app.use(cors({
-  origin: process.env.FRONTEND_URL 
-}));
+const allowedOrigins = [
+  'https://daily-mood-analyser-frontend.onrender.com', // Your deployed frontend
+  'http://localhost:5173'                             // Your local development machine
+];
 
+app.use(cors({
+  origin: allowedOrigins
+}));
 app.use(express.json({ limit: '10mb' }));
 
 // ✅ Connection string is correctly using an environment variable

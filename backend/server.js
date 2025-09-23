@@ -29,14 +29,12 @@ const pool = new pg.Pool({
 });
 
 
-// ... (all other routes like register, login, save-feed, etc., remain the same) ...
-
 // 🟢 Default Route
 app.get('/', (req, res) => {
     res.send('Server running');
 });
 
-// 🔐 Register User (updated for PostgreSQL)
+// 🔐 Register User (No changes needed)
 app.post('/add-item', async (req, res) => {
     try {
         const { name, email, password } = req.body;
@@ -63,7 +61,7 @@ app.post('/add-item', async (req, res) => {
     }
 });
 
-//  Login Check (updated for PostgreSQL)
+//  Login Check (No changes needed)
 app.post('/login-check', async (req, res) => {
     try {
         const { name, password } = req.body;
@@ -82,7 +80,7 @@ app.post('/login-check', async (req, res) => {
 });
 
 
-// 📝 Save Feed with AI Analysis (updated for PostgreSQL)
+// 📝 Save Feed with AI Analysis (No changes needed)
 app.post('/save-feed', async (req, res) => {
     const { user_id, title, content, emoji } = req.body;
     if (!user_id || !content) {
@@ -121,14 +119,13 @@ app.post('/save-feed', async (req, res) => {
     }
 });
 
-// ✅ NEW: Route specifically for the main feed page to get ALL entries
+// --- Other feed routes are unchanged ---
 app.post('/get-all-feeds', async (req, res) => {
     try {
         const { userId } = req.body;
         if (!userId) {
             return res.status(400).json({ success: false, message: "Missing userId" });
         }
-
         const sql = `
             SELECT id, title, content, emoji, prediction, created_at 
             FROM userfeeds 
@@ -143,16 +140,12 @@ app.post('/get-all-feeds', async (req, res) => {
     }
 });
 
-// 📥 Get All Feeds for User (updated for PostgreSQL)
 app.post('/get-feed', async (req, res) => {
     try {
-        // ✅ Now accepts a 'days' parameter for filtering
         const { userId, days } = req.body;
         if (!userId || !days) {
             return res.status(400).json({ success: false, message: "Missing userId or days" });
         }
-
-        // ✅ SQL query now filters by the last N days
         const sql = `
             SELECT id, title, content, emoji, prediction, created_at 
             FROM userfeeds 
@@ -168,7 +161,6 @@ app.post('/get-feed', async (req, res) => {
     }
 });
 
-// 📄 Get a single feed by its ID (updated for PostgreSQL)
 app.get('/get-feed/:id', async (req, res) => {
     try {
         const feedId = req.params.id;
@@ -184,7 +176,6 @@ app.get('/get-feed/:id', async (req, res) => {
     }
 });
 
-// ✏️ Update a feed (updated for PostgreSQL)
 app.put('/update-feed/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -198,7 +189,6 @@ app.put('/update-feed/:id', async (req, res) => {
     }
 });
 
-// 🗑️ Delete a feed (updated for PostgreSQL)
 app.delete('/delete-feed/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -211,29 +201,44 @@ app.delete('/delete-feed/:id', async (req, res) => {
     }
 });
 
-// 📅 Get Calendar Feeds (updated for PostgreSQL)
+// --- MODIFICATION 1 of 2 ---
+// 📅 Get Calendar Feeds (✅ TIMEZONE-AWARE FIX)
 app.get("/api/feeds/calendar/:userId", async (req, res) => {
     const { userId } = req.params;
     try {
-        const sql = `SELECT DATE(created_at) AS date, emoji FROM userfeeds WHERE user_id = $1 ORDER BY created_at ASC`;
+        // This query now converts the stored UTC time to 'Asia/Kolkata' (IST)
+        // before extracting the date. This ensures the date matches the user's local day.
+        const sql = `
+            SELECT (created_at AT TIME ZONE 'Asia/Kolkata')::date AS date, emoji 
+            FROM userfeeds 
+            WHERE user_id = $1 
+            ORDER BY created_at ASC
+        `;
         const { rows } = await pool.query(sql, [userId]);
         res.json({ success: true, feeds: rows });
     } catch (err) {
-        console.error("Error fetching calendar feeds:", err);
+        console.error("Error fetching timezone-aware calendar feeds:", err);
         res.status(500).json({ success: false, message: "Server error" });
     }
 });
 
-// 📊 Get Mood Counts for a specific month (updated for PostgreSQL)
+// --- MODIFICATION 2 of 2 ---
+// 📊 Get Mood Counts for a specific month (✅ TIMEZONE-AWARE FIX)
 app.post('/get-mood-counts', async (req, res) => {
     const { userId, year, month } = req.body;
     if (!userId || !year || !month) return res.status(400).json({ success: false, message: "Missing required fields" });
     try {
+        // This query also converts to 'Asia/Kolkata' before filtering by month and year.
         const sql = `
-            SELECT prediction, COUNT(*) as count 
-            FROM userfeeds 
-            WHERE user_id = $1 AND EXTRACT(YEAR FROM created_at) = $2 AND EXTRACT(MONTH FROM created_at) = $3
-            GROUP BY prediction
+            SELECT 
+                prediction, 
+                COUNT(*) as count
+            FROM userfeeds
+            WHERE 
+                user_id = $1 AND 
+                EXTRACT(YEAR FROM (created_at AT TIME ZONE 'Asia/Kota')) = $2 AND
+                EXTRACT(MONTH FROM (created_at AT TIME ZONE 'Asia/Kolkata')) = $3
+            GROUP BY prediction;
         `;
         const { rows: results } = await pool.query(sql, [userId, year, month]);
 
@@ -245,12 +250,13 @@ app.post('/get-mood-counts', async (req, res) => {
         });
         res.status(200).json({ success: true, counts });
     } catch (err) {
-        console.error("❌ Error fetching mood counts:", err);
+        console.error("❌ Error fetching timezone-aware mood counts:", err);
         res.status(500).json({ success: false, message: "Database error" });
     }
 });
 
-// 📈 Get Analysis Data (updated for PostgreSQL)
+
+// --- Other analysis routes are unchanged ---
 app.post('/get-analysis-data', async (req, res) => {
     const { userId } = req.body;
     if (!userId) return res.status(400).json({ success: false, message: "Missing userId" });
@@ -283,12 +289,10 @@ app.post('/get-analysis-data', async (req, res) => {
     }
 });
 
-// 😊 Get Emoji Counts by Days (✅ THIS IS THE CORRECTED VERSION)
 app.post('/get-emoji-counts', async (req, res) => {
     const { userId, days } = req.body;
     if (!userId || !days) return res.status(400).json({ success: false, message: "Missing required fields" });
     try {
-        // ✅ FIX: Use DATE_TRUNC to get data from the start of the day, N days ago. This is more reliable.
         const sql = `
             SELECT emoji, COUNT(*) as count 
             FROM userfeeds 
@@ -304,12 +308,10 @@ app.post('/get-emoji-counts', async (req, res) => {
     }
 });
 
-// 📊 Get Mood Counts by Days (✅ THIS IS THE CORRECTED VERSION)
 app.post('/get-mood-counts-by-days', async (req, res) => {
     const { userId, days } = req.body;
     if (!userId || !days) return res.status(400).json({ success: false, message: "Missing required fields" });
     try {
-        // ✅ FIX: Use DATE_TRUNC here as well for consistent logic.
         const sql = `
             SELECT prediction, COUNT(*) as count 
             FROM userfeeds 
@@ -332,7 +334,7 @@ app.post('/get-mood-counts-by-days', async (req, res) => {
     }
 });
 
-// ... (processUnanalyzedFeeds and app.listen can remain the same) ...
+// --- processUnanalyzedFeeds and app.listen are unchanged ---
 async function processUnanalyzedFeeds() {
   console.log('🔍 Checking for any unanalyzed feeds...');
   try {

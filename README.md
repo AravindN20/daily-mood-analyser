@@ -1,14 +1,14 @@
-# Mood Predictor - Daily Mood Analyser 🧠✨
+# Mood Predictor - Daily Mood Analyser 
 
 A full-stack web application that allows users to journal their daily thoughts and receive an ML-based prediction of their underlying mood, helping them track their mental well-being over time.
 
 
 
-## 📝 About The Project
+##  About The Project
 
 This project is a multi-service application designed to provide a seamless user experience for journaling and mood analysis. It leverages a modern tech stack, including a React frontend, a Node.js backend, a PostgreSQL database, and a dedicated Python machine learning service for text classification. The entire application is architected for cloud deployment.
 
-## ✨ Features
+##  Features
 
 * **User Authentication:** Secure user registration and login system.
 * **CRUD Functionality:** Create, read, update, and delete journal entries.
@@ -18,7 +18,7 @@ This project is a multi-service application designed to provide a seamless user 
 
 ---
 
-## 🛠️ Tech Stack & Architecture
+##  Tech Stack & Architecture
 
 This project is composed of three main services and a database, all communicating via REST APIs.
 
@@ -38,7 +38,7 @@ V
 |
 |
 [ Database (PostgreSQL) on Supabase ] <---------
-## 🚀 Getting Started
+##  Getting Started
 
 To get a local copy up and running, follow these simple steps.
 
@@ -80,7 +80,7 @@ Make sure you have the following installed on your machine:
 
 ---
 
-## 🏃 Running the Application Locally
+##  Running the Application Locally
 
 You will need to run the three services in **three separate terminals** from the project's root directory.
 
@@ -104,7 +104,7 @@ You will need to run the three services in **three separate terminals** from the
 
 ---
 
-## 🔑 Environment Variables
+##  Environment Variables
 
 You need to create a `.env` file inside your `backend` folder to run the application locally.
 

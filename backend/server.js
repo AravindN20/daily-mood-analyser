@@ -121,6 +121,27 @@ app.post('/save-feed', async (req, res) => {
     }
 });
 
+// ✅ NEW: Route specifically for the main feed page to get ALL entries
+app.post('/get-all-feeds', async (req, res) => {
+    try {
+        const { userId } = req.body;
+        if (!userId) {
+            return res.status(400).json({ success: false, message: "Missing userId" });
+        }
+
+        const sql = `
+            SELECT id, title, content, emoji, prediction, created_at 
+            FROM userfeeds 
+            WHERE user_id = $1
+            ORDER BY created_at DESC
+        `;
+        const { rows: results } = await pool.query(sql, [userId]);
+        res.status(200).json({ success: true, feeds: results });
+    } catch (err) {
+        console.error('❌ Error fetching all feeds:', err);
+        res.status(500).json({ success: false, message: 'Database error' });
+    }
+});
 
 // 📥 Get All Feeds for User (updated for PostgreSQL)
 app.post('/get-feed', async (req, res) => {

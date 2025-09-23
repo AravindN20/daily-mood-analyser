@@ -201,13 +201,10 @@ app.delete('/delete-feed/:id', async (req, res) => {
     }
 });
 
-// --- MODIFICATION 1 of 2 ---
-// 📅 Get Calendar Feeds (✅ TIMEZONE-AWARE FIX)
+// 📅 Get Calendar Feeds (This is correct)
 app.get("/api/feeds/calendar/:userId", async (req, res) => {
     const { userId } = req.params;
     try {
-        // This query now converts the stored UTC time to 'Asia/Kolkata' (IST)
-        // before extracting the date. This ensures the date matches the user's local day.
         const sql = `
             SELECT (created_at AT TIME ZONE 'Asia/Kolkata')::date AS date, emoji 
             FROM userfeeds 
@@ -222,13 +219,13 @@ app.get("/api/feeds/calendar/:userId", async (req, res) => {
     }
 });
 
-// --- MODIFICATION 2 of 2 ---
-// 📊 Get Mood Counts for a specific month (✅ TIMEZONE-AWARE FIX)
+// ✅ *** THE ONLY CHANGE IS HERE *** ✅
+// 📊 Get Mood Counts for a specific month (FIXED)
 app.post('/get-mood-counts', async (req, res) => {
     const { userId, year, month } = req.body;
     if (!userId || !year || !month) return res.status(400).json({ success: false, message: "Missing required fields" });
     try {
-        // This query also converts to 'Asia/Kolkata' before filtering by month and year.
+        // This query now has the corrected 'Asia/Kolkata' timezone.
         const sql = `
             SELECT 
                 prediction, 
@@ -236,7 +233,7 @@ app.post('/get-mood-counts', async (req, res) => {
             FROM userfeeds
             WHERE 
                 user_id = $1 AND 
-                EXTRACT(YEAR FROM (created_at AT TIME ZONE 'Asia/Kota')) = $2 AND
+                EXTRACT(YEAR FROM (created_at AT TIME ZONE 'Asia/Kolkata')) = $2 AND
                 EXTRACT(MONTH FROM (created_at AT TIME ZONE 'Asia/Kolkata')) = $3
             GROUP BY prediction;
         `;
@@ -251,7 +248,7 @@ app.post('/get-mood-counts', async (req, res) => {
         res.status(200).json({ success: true, counts });
     } catch (err) {
         console.error("❌ Error fetching timezone-aware mood counts:", err);
-        res.status(500).json({ success: false, message: "Database error" });
+        res.status(500).json({ success: false, message: "Server error" });
     }
 });
 

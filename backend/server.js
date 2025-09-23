@@ -121,14 +121,25 @@ app.post('/save-feed', async (req, res) => {
     }
 });
 
+
 // 📥 Get All Feeds for User (updated for PostgreSQL)
 app.post('/get-feed', async (req, res) => {
     try {
-        const { userId } = req.body;
-        if (!userId) return res.status(400).json({ success: false, message: "Missing userId" });
+        // ✅ Now accepts a 'days' parameter for filtering
+        const { userId, days } = req.body;
+        if (!userId || !days) {
+            return res.status(400).json({ success: false, message: "Missing userId or days" });
+        }
 
-        const sql = `SELECT * FROM userfeeds WHERE user_id = $1 ORDER BY created_at DESC`;
-        const { rows: results } = await pool.query(sql, [userId]);
+        // ✅ SQL query now filters by the last N days
+        const sql = `
+            SELECT id, title, content, emoji, prediction, created_at 
+            FROM userfeeds 
+            WHERE user_id = $1 
+            AND created_at >= DATE_TRUNC('day', NOW() - ($2 - 1) * INTERVAL '1 day')
+            ORDER BY created_at DESC
+        `;
+        const { rows: results } = await pool.query(sql, [userId, days]);
         res.status(200).json({ success: true, feeds: results });
     } catch (err) {
         console.error('❌ Error fetching feeds:', err);

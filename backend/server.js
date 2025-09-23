@@ -9,7 +9,7 @@ dotenv.config();
 const app = express();
 
 const allowedOrigins = [
-  'https://daily-mood-analyser-frontend.onrender.com',// Your local development machine
+  'https://daily-mood-analyser-frontend.onrender.com',
   'http://localhost:5173'
 ];
 
@@ -28,6 +28,8 @@ const pool = new pg.Pool({
     }
 });
 
+
+// ... (all other routes like register, login, save-feed, etc., remain the same) ...
 
 // 🟢 Default Route
 app.get('/', (req, res) => {
@@ -90,23 +92,20 @@ app.post('/save-feed', async (req, res) => {
     try {
         const textToAnalyze = `${title || ''}. ${content}`;
         try {
-            // <-- CHANGED: Using environment variable for the AI service URL
             const aiServiceUrl = `${process.env.AI_SERVICE_URL}/analyze`;
             const aiResponse = await axios.post(aiServiceUrl, { text: textToAnalyze });
             
-           //...
-const genericLabel = aiResponse.data.prediction;
-const labelMap = { // <-- THIS IS THE NEW, CORRECT ONE
-  'sadness':  'depressed',
-  'anger':    'stressed',
-  'fear':     'stressed',
-  'disgust':  'stressed',
-  'neutral':  'normal',
-  'joy':      'normal',
-  'surprise': 'normal'
-};
-prediction = labelMap[genericLabel] || 'unknown';
-//...
+            const genericLabel = aiResponse.data.prediction;
+            const labelMap = {
+              'sadness':  'depressed',
+              'anger':    'stressed',
+              'fear':     'stressed',
+              'disgust':  'stressed',
+              'neutral':  'normal',
+              'joy':      'normal',
+              'surprise': 'normal'
+            };
+            prediction = labelMap[genericLabel] || 'unknown';
         } catch (aiError) {
             console.error("❌ Error calling AI service:", aiError.message);
             prediction = 'analysis_failed';
@@ -252,16 +251,18 @@ app.post('/get-analysis-data', async (req, res) => {
     }
 });
 
-// 😊 Get Emoji Counts by Days (updated for PostgreSQL)
+// 😊 Get Emoji Counts by Days (✅ THIS IS THE CORRECTED VERSION)
 app.post('/get-emoji-counts', async (req, res) => {
     const { userId, days } = req.body;
     if (!userId || !days) return res.status(400).json({ success: false, message: "Missing required fields" });
     try {
+        // ✅ FIX: Use DATE_TRUNC to get data from the start of the day, N days ago. This is more reliable.
         const sql = `
             SELECT emoji, COUNT(*) as count 
             FROM userfeeds 
-            WHERE user_id = $1 AND created_at >= NOW() - ($2 * INTERVAL '1 day')
+            WHERE user_id = $1 AND created_at >= DATE_TRUNC('day', NOW() - ($2 - 1) * INTERVAL '1 day')
             GROUP BY emoji
+            HAVING emoji IS NOT NULL AND emoji != ''
         `;
         const { rows: results } = await pool.query(sql, [userId, days]);
         res.status(200).json({ success: true, emojiCounts: results });
@@ -271,16 +272,17 @@ app.post('/get-emoji-counts', async (req, res) => {
     }
 });
 
-// 📊 Get Mood Counts by Days (updated for PostgreSQL)
+// 📊 Get Mood Counts by Days (✅ THIS IS THE CORRECTED VERSION)
 app.post('/get-mood-counts-by-days', async (req, res) => {
     const { userId, days } = req.body;
     if (!userId || !days) return res.status(400).json({ success: false, message: "Missing required fields" });
     try {
+        // ✅ FIX: Use DATE_TRUNC here as well for consistent logic.
         const sql = `
             SELECT prediction, COUNT(*) as count 
             FROM userfeeds 
             WHERE user_id = $1 
-            AND created_at >= NOW() - ($2 * INTERVAL '1 day')
+            AND created_at >= DATE_TRUNC('day', NOW() - ($2 - 1) * INTERVAL '1 day')
             AND prediction IN ('normal', 'stressed', 'depressed')
             GROUP BY prediction
         `;
@@ -298,8 +300,7 @@ app.post('/get-mood-counts-by-days', async (req, res) => {
     }
 });
 
-
-// <-- NEW FUNCTION TO PROCESS MISSED FEEDS ON STARTUP
+// ... (processUnanalyzedFeeds and app.listen can remain the same) ...
 async function processUnanalyzedFeeds() {
   console.log('🔍 Checking for any unanalyzed feeds...');
   try {
@@ -317,21 +318,19 @@ async function processUnanalyzedFeeds() {
     for (const feed of feedsToProcess) {
       try {
         const textToAnalyze = `${feed.title || ''}. ${feed.content}`;
-
-        // <-- CHANGED: Using environment variable for the AI service URL
         const aiServiceUrl = `${process.env.AI_SERVICE_URL}/analyze`;
         const aiResponse = await axios.post(aiServiceUrl, { text: textToAnalyze });
         
         const genericLabel = aiResponse.data.prediction;
-       const labelMap = {
-  'sadness':  'depressed',
-  'anger':    'stressed',
-  'fear':     'stressed',
-  'disgust':  'stressed',
-  'neutral':  'normal',
-  'joy':      'normal',
-  'surprise': 'normal'
-};
+        const labelMap = {
+          'sadness':  'depressed',
+          'anger':    'stressed',
+          'fear':     'stressed',
+          'disgust':  'stressed',
+          'neutral':  'normal',
+          'joy':      'normal',
+          'surprise': 'normal'
+        };
         const newPrediction = labelMap[genericLabel] || 'unknown';
 
         await pool.query(

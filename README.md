@@ -18,7 +18,11 @@ This project is a multi-service application designed to provide a seamless user 
 
 ---
 
+<<<<<<< HEAD
 ##  Tech Stack & Architecture
+=======
+## Tech Stack & Architecture
+>>>>>>> d5fcb1d856ea68c8a80480408d42f0bc533045a8
 
 This project is composed of three main services and a database, all communicating via REST APIs.
 
